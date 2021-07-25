@@ -3,7 +3,6 @@ module.exports = {
         "<rootDir>/src"
     ],
     "testMatch": [
-        "**/__tests__/**/*.+(ts|tsx|js)",
         "**/__tests__/**/?(*.)+(spec|test).+(ts|tsx|js)"
     ],
     "transform": {
@@ -11,4 +10,5 @@ module.exports = {
     },
     preset: '@shelf/jest-mongodb',
     watchPathIgnorePatterns: ['globalConfig'],
+    setupFilesAfterEnv: ['./jest.setup.redis-mock.js'],
 };
