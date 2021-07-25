@@ -1,3 +1,5 @@
 /.devcontainer
 /build
 /node_modules
+
+globalConfig.json
