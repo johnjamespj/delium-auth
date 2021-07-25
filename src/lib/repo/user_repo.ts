@@ -1,5 +1,5 @@
 import { MongoClient, Db, ObjectId } from 'mongodb';
-import { CustomAttributes, PasswordPayload, User, UserSimple } from './interfaces';
+import { CustomAttributes, PasswordPayload, User, UserSimple } from '../interfaces';
 
 export abstract class UserRepo {
     static async createMongoUserRepo(): Promise<UserRepo | null> {
@@ -17,6 +17,8 @@ export abstract class UserRepo {
     abstract getUserByEmail(email: string): Promise<User>;
 
     abstract getUserByID(id: string): Promise<User>;
+
+    abstract deleteUser(email: string): Promise<boolean>;
 }
 
 export class UserRepoMongoDB extends UserRepo {
@@ -117,5 +119,17 @@ export class UserRepoMongoDB extends UserRepo {
             passwordPayload: userDocument.passwordPayload,
             verified: userDocument.verified,
         };
+    }
+
+    async deleteUser(email: string): Promise<boolean> {
+        if (!(await this.doesUserExists(email))) {
+            throw new Error("Error: User does not exists!");
+        }
+
+        await this.db.collection("users").deleteOne({
+            email,
+        })
+
+        return true;
     }
 }

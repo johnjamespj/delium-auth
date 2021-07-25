@@ -1,7 +1,7 @@
 import { MongoClient, Db, ObjectId } from 'mongodb';
 import { PasswordPayload } from '../../lib/interfaces';
 
-import { UserRepoMongoDB } from '../../lib/user_repo'
+import { UserRepoMongoDB } from '../../lib/repo/user_repo'
 import { generateRandomEmail } from '../../lib/utils';
 
 describe('UserRepo : UserRepoMongoDB', () => {
@@ -23,12 +23,13 @@ describe('UserRepo : UserRepoMongoDB', () => {
     expect(typeof userRepo.setPasswordAfterRecovery).toBe("function");
     expect(typeof userRepo.getUserByEmail).toBe("function");
     expect(typeof userRepo.getUserByID).toBe("function");
+    expect(typeof userRepo.deleteUser).toBe("function");
   })
 
   it("UserRepoMongoDB: createUser() creates a new user", async () => {
     const collection = db.collection("users");
     let email = generateRandomEmail();
-    let passwordPayload: PasswordPayload = { salt: "" };
+    let passwordPayload: PasswordPayload = { salt: "", verifier: "" };
     let customAttributes = { test: "test" };
 
     expect(typeof userRepo.createUser).toBe("function");
@@ -53,11 +54,7 @@ describe('UserRepo : UserRepoMongoDB', () => {
     email = generateRandomEmail();
     let r2 = await userRepo.createUser(email, passwordPayload);
 
-    try {
-      await userRepo.createUser(email, passwordPayload)
-    } catch (e) {
-      expect(e.message).toMatch("Error: User already exists!");
-    }
+    await expect(userRepo.createUser(email, passwordPayload)).rejects.toThrow(new Error("Error: User already exists!"))
 
     await collection.deleteMany({});
   })
@@ -65,7 +62,7 @@ describe('UserRepo : UserRepoMongoDB', () => {
   it("UserRepoMongoDB: doesUserExists() checks if a user exists", async () => {
     const collection = db.collection("users");
     const email = generateRandomEmail();
-    const passwordPayload: PasswordPayload = { salt: "" };
+    const passwordPayload: PasswordPayload = { salt: "", verifier: ""  };
 
     expect(typeof userRepo.doesUserExists).toBe("function");
 
@@ -79,7 +76,7 @@ describe('UserRepo : UserRepoMongoDB', () => {
   it("UserRepoMongoDB: setUserAsVerified() set user as verifed", async () => {
     const collection = db.collection("users");
     let email = generateRandomEmail();
-    let passwordPayload: PasswordPayload = { salt: "" };
+    let passwordPayload: PasswordPayload = { salt: "", verifier: "" };
 
     expect(typeof userRepo.setUserAsVerified).toBe("function");
 
@@ -88,11 +85,7 @@ describe('UserRepo : UserRepoMongoDB', () => {
 
     expect(!u1?.verified);
 
-    try {
-      await userRepo.setUserAsVerified(generateRandomEmail())
-    } catch (e) {
-      expect(e.message).toMatch("Error: User does not exists!");
-    }
+    await expect(userRepo.setUserAsVerified(generateRandomEmail())).rejects.toThrow(new Error("Error: User does not exists!"))
 
     await userRepo.setUserAsVerified(email)
     u1 = await collection.findOne({ _id: new ObjectId(r1.id) });
@@ -110,7 +103,7 @@ describe('UserRepo : UserRepoMongoDB', () => {
   it("UserRepoMongoDB: getUserByID() get a user from its id", async () => {
     const collection = db.collection("users");
     let email = generateRandomEmail();
-    let passwordPayload: PasswordPayload = { salt: "" };
+    let passwordPayload: PasswordPayload = { salt: "", verifier: "" };
     let customAttributes = { test: "test" };
 
     expect(typeof userRepo.getUserByID).toBe("function");
@@ -130,11 +123,7 @@ describe('UserRepo : UserRepoMongoDB', () => {
     expect(u1?.customAttributes).toStrictEqual(customAttributes);
     expect(!u1?.verified);
 
-    try {
-      await userRepo.getUserByID(generateRandomEmail())
-    } catch (e) {
-      expect(e.message).toMatch("Error: User does not exists!");
-    }
+    await expect(userRepo.getUserByID(generateRandomEmail())).rejects.toThrow(new Error("Error: User does not exists!"))
 
     await collection.deleteMany({});
 
@@ -143,7 +132,7 @@ describe('UserRepo : UserRepoMongoDB', () => {
   it("UserRepoMongoDB: getUserByEmail() get a user from its email", async () => {
     const collection = db.collection("users");
     let email = generateRandomEmail();
-    let passwordPayload: PasswordPayload = { salt: "" };
+    let passwordPayload: PasswordPayload = { salt: "", verifier: "" };
     let customAttributes = { test: "test" };
 
     expect(typeof userRepo.getUserByEmail).toBe("function");
@@ -163,11 +152,8 @@ describe('UserRepo : UserRepoMongoDB', () => {
     expect(u1?.customAttributes).toStrictEqual(customAttributes);
     expect(!u1?.verified);
 
-    try {
-      await userRepo.getUserByEmail(generateRandomEmail())
-    } catch (e) {
-      expect(e.message).toMatch("Error: User does not exists!");
-    }
+    await expect(userRepo.getUserByEmail(generateRandomEmail())).rejects.toThrow(new Error("Error: User does not exists!"))
+
     await collection.deleteMany({});
 
   })
@@ -175,7 +161,7 @@ describe('UserRepo : UserRepoMongoDB', () => {
   it("UserRepoMongoDB: setPasswordAfterRecovery() recover account from email", async () => {
     const collection = db.collection("users");
     let email = generateRandomEmail();
-    let passwordPayload: PasswordPayload = { salt: "" };
+    let passwordPayload: PasswordPayload = { salt: "", verifier: "" };
 
     expect(typeof userRepo.setPasswordAfterRecovery).toBe("function");
 
@@ -184,18 +170,29 @@ describe('UserRepo : UserRepoMongoDB', () => {
 
     expect(u1?.passwordPayload).toStrictEqual(passwordPayload);
 
-    try {
-      await userRepo.setPasswordAfterRecovery(generateRandomEmail(), passwordPayload);
-    } catch (e) {
-      expect(e.message).toMatch("Error: User does not exists!");
-    }
+    await expect(userRepo.setPasswordAfterRecovery(generateRandomEmail(), passwordPayload)).rejects.toThrow(new Error("Error: User does not exists!"))
 
-    passwordPayload = {salt : "salt"};
+    passwordPayload = {salt : "salt", verifier: "" };
     await userRepo.setPasswordAfterRecovery(email, passwordPayload)
     u1 = await collection.findOne({ _id: new ObjectId(r1.id) });
     expect(u1?.passwordPayload).toStrictEqual(passwordPayload);
 
     await collection.deleteMany({});
+  });
+
+  it("UserRepoMongoDB: deleteUser() deletes a user using the email", async () => {
+    const collection = db.collection("users");
+    let email = generateRandomEmail();
+    let passwordPayload: PasswordPayload = { salt: "", verifier: "" };
+
+    let r1 = await userRepo.createUser(email, passwordPayload);
+
+    await userRepo.deleteUser(email);
+    let u1 = await collection.findOne({ _id: new ObjectId(r1.id) });
+
+    expect(u1).toBeUndefined()
+
+    await expect(userRepo.deleteUser(generateRandomEmail())).rejects.toThrow(new Error("Error: User does not exists!"))
   });
 
   afterAll(async () => {
