@@ -1,5 +1,6 @@
 export interface PasswordPayload {
     salt: string;
+    verifier: string;
 }
 
 export interface UserSimple {
@@ -18,4 +19,9 @@ export interface User {
 
 export interface CustomAttributes {
     [key: string]: any;
+}
+
+export interface SRPSessionInfo{
+    user: User;
+    bValue: string;
 }
