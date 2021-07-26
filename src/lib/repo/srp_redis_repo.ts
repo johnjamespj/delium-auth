@@ -4,9 +4,6 @@ import { SRPSessionInfo, User } from "../interfaces";
 import { createNodeRedisClient, WrappedNodeRedisClient } from 'handy-redis';
 
 export class SRPRedisRepo {
-    static mockClear() {
-        throw new Error("Method not implemented.");
-    }
     static expiry: number = 60 * 60;
 
     redisClient: WrappedNodeRedisClient;
@@ -34,6 +31,7 @@ export class SRPRedisRepo {
             throw new Error('Error: Session does not exist or session expired!');
         }
 
+        await this.redisClient.del(sessionId);
         let storedObject = JSON.parse(storedObjectRaw);
         return {
             user: storedObject.user,
