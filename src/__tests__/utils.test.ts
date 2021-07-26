@@ -22,7 +22,5 @@ describe("Utils : utility for testing", () => {
     })
 
     // TODO: generateRandomNumberFromRange
-    it("generateRandomNumberFromRange(): generates a random number from a range", () => {
-        expect(typeof generateRandomNumberFromRange).toBe("function");
-    })
+    it.todo("generateRandomNumberFromRange(): generates a random number from a range");
 });
