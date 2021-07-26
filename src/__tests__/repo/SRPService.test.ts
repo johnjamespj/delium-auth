@@ -1,4 +1,4 @@
-import { SRPService } from "../../lib/services/srp/srp_service";
+import { SRPService } from "../../lib/services/srp_service";
 import { generateRandomEmail, generateRandomString, uuidRegex } from "../../lib/utils";
 import { derivePrivateKey, deriveSession, deriveVerifier, generateEphemeral, generateSalt } from "secure-remote-password/client";
 

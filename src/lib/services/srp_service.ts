@@ -1,8 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
-import { SRPRedisRepo } from "../../repo/srp_redis_repo";
+import { SRPRedisRepo } from "../repo/srp_redis_repo";
 import { deriveSession, generateEphemeral } from "secure-remote-password/server";
-import { User } from "../../interfaces";
-import { generateRandomEmail, generateRandomString } from "../../utils";
+import { User } from "../interfaces";
+import { generateRandomEmail, generateRandomString } from "../utils";
 import { derivePrivateKey, deriveVerifier } from "secure-remote-password/client";
 
 interface InitialExchangeResponse {
