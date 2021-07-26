@@ -15,10 +15,10 @@ describe("SRPRedisRepo: Store SRP session information", () => {
     });
 
     it("SRPRedisRepo: has all functions", async () => {
-        expect(typeof srpRedisRepo.createBValueStoreSession).toBe("function");
+        expect(typeof srpRedisRepo.createServerSecretEphemeralStoreSession).toBe("function");
     })
 
-    it("SRPRedisRepo: createBValueStoreSession() stores B value for SRP session", async () => {
+    it("SRPRedisRepo: createServerSecretEphemeralStoreSession() stores ServerSecretEphemeral for SRP session", async () => {
         let user: User = {
             email: generateRandomEmail(),
             id: generateRandomString(25),
@@ -31,20 +31,20 @@ describe("SRPRedisRepo: Store SRP session information", () => {
                 verifier: "",
             }
         };
-        let bValue: string = generateRandomString(25)
+        let serverSecretEphemeral: string = generateRandomString(25)
 
-        let sessionInfo = await srpRedisRepo.createBValueStoreSession(user, bValue);
+        let sessionInfo = await srpRedisRepo.createServerSecretEphemeralStoreSession(user, serverSecretEphemeral);
         expect(typeof sessionInfo).toBe("string");
         expect(sessionInfo).toMatch(uuidRegex);
 
         let srpSessionInfo = JSON.parse(await client.get(sessionInfo) ?? "{}")
         expect(srpSessionInfo.user).toStrictEqual(user)
-        expect(srpSessionInfo.bValue).toMatch(bValue)
+        expect(srpSessionInfo.serverSecretEphemeral).toMatch(serverSecretEphemeral)
 
         expect(await client.ttl(sessionInfo) <= SRPRedisRepo.expiry);
     })
 
-    it("SRPRedisRepo: getBValueFromSession() get session info from session key", async () => {
+    it("SRPRedisRepo: getServerSecretEphemeralFromSession() get session info from session key", async () => {
         let user: User = {
             email: generateRandomEmail(),
             id: generateRandomString(25),
@@ -57,18 +57,19 @@ describe("SRPRedisRepo: Store SRP session information", () => {
                 verifier: "",
             }
         };
-        let bValue = generateRandomString(25);
+        let serverSecretEphemeral = generateRandomString(25);
 
-        let sessionId = await srpRedisRepo.createBValueStoreSession(user, bValue);
-        let sessionInfo = await srpRedisRepo.getBValueFromSession(sessionId);
+        let sessionId = await srpRedisRepo.createServerSecretEphemeralStoreSession(user, serverSecretEphemeral);
+        let sessionInfo = await srpRedisRepo.getServerSecretEphemeralFromSession(sessionId);
 
-        await expect(srpRedisRepo.getBValueFromSession(generateRandomString(25))).rejects.toThrow(new Error('Error: Session does not exist or session expired!'));
+        await expect(srpRedisRepo.getServerSecretEphemeralFromSession(generateRandomString(25))).rejects.toThrow(new Error('Error: Session does not exist or session expired!'));
 
         expect(sessionInfo.user).toStrictEqual(user);
-        expect(sessionInfo.bValue).toStrictEqual(bValue);
+        expect(sessionInfo.serverSecretEphemeral).toStrictEqual(serverSecretEphemeral);
     })
 
     afterAll(async () => {
+        await client.flushdb();
         client.end();
     });
 })

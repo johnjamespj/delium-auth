@@ -4,6 +4,9 @@ import { SRPSessionInfo, User } from "../interfaces";
 import { createNodeRedisClient, WrappedNodeRedisClient } from 'handy-redis';
 
 export class SRPRedisRepo {
+    static mockClear() {
+        throw new Error("Method not implemented.");
+    }
     static expiry: number = 60 * 60;
 
     redisClient: WrappedNodeRedisClient;
@@ -12,11 +15,11 @@ export class SRPRedisRepo {
         this.redisClient = createNodeRedisClient(redisClient);
     }
 
-    async createBValueStoreSession(user: User, bValue: String) : Promise<string> {
+    async createServerSecretEphemeralStoreSession(user: User, serverSecretEphemeral: String) : Promise<string> {
         let id: string = uuidv4();
 
         this.redisClient.set(id, JSON.stringify({
-            bValue,
+            serverSecretEphemeral,
             user,
         }))
         this.redisClient.expire(id, SRPRedisRepo.expiry)
@@ -24,7 +27,7 @@ export class SRPRedisRepo {
         return id;
     }
 
-    async getBValueFromSession(sessionId: string): Promise<SRPSessionInfo>{
+    async getServerSecretEphemeralFromSession(sessionId: string): Promise<SRPSessionInfo>{
         let storedObjectRaw = await this.redisClient.get(sessionId);
 
         if (storedObjectRaw === null){
@@ -34,7 +37,7 @@ export class SRPRedisRepo {
         let storedObject = JSON.parse(storedObjectRaw);
         return {
             user: storedObject.user,
-            bValue: storedObject.bValue,
+            serverSecretEphemeral: storedObject.serverSecretEphemeral,
         };
     }
 }

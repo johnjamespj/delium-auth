@@ -23,5 +23,5 @@ export interface CustomAttributes {
 
 export interface SRPSessionInfo{
     user: User;
-    bValue: string;
+    serverSecretEphemeral: string;
 }
