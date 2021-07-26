@@ -1,5 +1,6 @@
 /.devcontainer
 /build
 /node_modules
+/coverage
 
 globalConfig.json
